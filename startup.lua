@@ -37,10 +37,9 @@ os.pullEvent = function(e_type)
 end
 
 -- END PASTEBIN EXCLUDE
-
-
 local machine = require('statemachine')
 local channel_map = require('channelmap')
+local pretty = require('cc.pretty')
 
 -- When the computer loads up it will set all the corresponding channels into these values. States will each have a list of inputs to set to the opposite value.
 local redstone_defaults = {
@@ -78,6 +77,16 @@ local function eventloop() -- routine
   end
 end
 
+local function initialize_channels(map)
+  local channels = {}
+  for index, value in pairs(map) do
+    for peripheral_id, side in string.gmatch(value, "([%w_]+)%.(%w+)") do
+      channels[index] = {peripheral = peripheral.wrap(peripheral_id), side = side}
+    end 
+  end
+  return channels
+end
+
 local function load_state()
   if #fs.find('recover.txt') > 0 then
     local lines = {}
@@ -112,11 +121,9 @@ local function main() -- routine
 
   FSM:load()
 
+  local channels = initialize_channels(channel_map)
+  pretty.pretty_print(channels)
   local monitor = peripheral.find("monitor")
-
-  -- repeat
-  --   eventloop()
-  -- until false -- TODO: failure states
   
   FSM.ontrain_arrive = function(self, event, from, to) print("Choo choo") end
   FSM.onstatechange = function(self, event, from, to)

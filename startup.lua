@@ -40,7 +40,32 @@ end
 
 
 local machine = require('statemachine')
+local channel_map = require('channelmap')
 
+-- When the computer loads up it will set all the corresponding channels into these values. States will each have a list of inputs to set to the opposite value.
+local redstone_defaults = {
+  recoup_output       = true,
+  train_psi_output    = true,
+  train_leave_output  = false,
+  factory_output      = true
+}
+
+-- When we load into any state, we activate the corresponding channels.
+-- Activation means switching into the opposite of the default state.
+local state_output_map = {
+  inactive = {}, -- We need to pulse the train_leave_output signal, so we'll do that manually in the onenterinactive callback.
+  sig_wait = {},
+  input = {"train_psi_output"},
+  recoup_wait = {"recoup_output"},
+  output = {"factory_output"}
+}
+
+-- Map each input channel to an event. On rising edge for each of these channels, we call the callback.
+local redstone_callbacks = {
+  train_arrive_input  = function() FSM:train_arrive() end,
+  buffer_empty_input  = function() FSM:recoup_empty() end,
+  collect_input       = function() FSM:collect()      end
+}
 
 local function timeout(time_sec)
   os.setAlarm(os.time() + time_sec)
@@ -97,12 +122,15 @@ local function main() -- routine
   FSM.onstatechange = function(self, event, from, to)
     monitor.clear()
     monitor.setCursorPos(1,1)
-    monitor.write("Station state: " .. FSM.current)
+    monitor.setTextColor(colors.white)
+    monitor.write("Station state: ")
+    monitor.setTextColor(colors.lime)
+    monitor.write(to)
 
     local f = io.open("./recover.txt", "w")
     if f then
       f:write(to)
-      f:close()  
+      f:close()
     end
   end
   FSM:train_arrive()

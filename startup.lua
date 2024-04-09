@@ -9,7 +9,11 @@ local fs = {
 }
 
 local peripheral = {
-  find = function(e) return {"something"} end
+  find = function(e) return {
+    clear = function () end,
+    write = function (_) end,
+    setCursorPos = function (_, _) end
+  } end
 }
 
 Events = {}
@@ -85,9 +89,9 @@ local function main() -- routine
 
   local monitor = peripheral.find("monitor")
 
-  repeat
-    eventloop()
-  until false -- TODO: failure states
+  -- repeat
+  --   eventloop()
+  -- until false -- TODO: failure states
   
   FSM.ontrain_arrive = function(self, event, from, to) print("Choo choo") end
   FSM.onstatechange = function(self, event, from, to)
@@ -95,8 +99,11 @@ local function main() -- routine
     monitor.setCursorPos(1,1)
     monitor.write("Station state: " .. FSM.current)
 
-    local f = fs.open("./recover.txt", "w")
-    f.write(to)
+    local f = io.open("./recover.txt", "w")
+    if f then
+      f:write(to)
+      f:close()  
+    end
   end
   FSM:train_arrive()
   FSM:collect()

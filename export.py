@@ -39,7 +39,7 @@ def upload(s):
     print(f"Done, to import into the computer run \npastebin get {code} {filename}")
 
 def exclude(s):
-    return re.sub(r'-- PASTEBIN EXCLUDE(.*?)-- END PASTEBIN EXCLUDE', '', s, flags=re.DOTALL | re.MULTILINE)
+    return re.sub(r'-- PASTEBIN EXCLUDE(.*?)-- END PASTEBIN EXCLUDE\s*?\n', '', s, flags=re.DOTALL | re.MULTILINE)
 
 if __name__ == '__main__':
     with open(filename, 'r') as f:

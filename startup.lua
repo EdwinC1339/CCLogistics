@@ -45,7 +45,7 @@ end
 local function eventloop() -- routine
   local event, id = os.pullEvent('alarm')
   if id then
-    FSM.timeout()
+    FSM:timeout()
   end
 end
 

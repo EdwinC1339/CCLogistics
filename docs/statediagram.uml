@@ -1,0 +1,26 @@
+@startuml
+skin rose
+hide empty description
+
+state inactive
+
+state input : enable portable storage interface funnels, \ntake items out of train
+state output : enable production output buffer funnels, \nput items into train
+state input_with_recoup : same as input
+state recoup : enable recoup output funnels
+state leave : tell train to gtfo\nshort duration
+
+[*] --> inactive : load
+inactive --> output : collect
+inactive --> sig_wait : train_arrive
+sig_wait --> input : timeout
+sig_wait --> output : collect
+input --> input_with_recoup : recoup_rising
+input_with_recoup --> recoup : timeout
+input --> leave: timeout
+recoup -> flush : recoup_falling
+flush -> leave : timeout
+output --> flush : timeout
+
+leave -> inactive : timeout
+@enduml

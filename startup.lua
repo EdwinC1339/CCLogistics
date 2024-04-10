@@ -233,8 +233,9 @@ local function main() -- routine
       { name = 'timeout', from = 'leave', to = 'inactive'},
       { name = 'collect', from = 'sig_wait', to = 'output'},
       { name = 'collect', from = 'inactive', to = 'output'}, -- Collect signal may arrive before train arrive signal
-      { name = 'recoup_rising', from = 'input', to = 'recoup' },
-      { name = 'recoup_falling', from = 'recoup', to = 'recoup_flush'},
+      { name = 'recoup_rising', from = 'input', to = 'input_with_recoup' },
+      { name = 'timeout', from = 'input_with_recoup', to = 'recoup' },
+      { name = 'recoup_falling', from = 'recoup', to = 'flush'},
 
       { name = 'load', from = 'loading', to = first_state}
   }})
@@ -242,6 +243,11 @@ local function main() -- routine
   -- When in sig_wait, we timeout and put the id here. If we receive the collect signal, we mask over that timeout to avoid timing
   -- out of the output cycle early.
   local sig_ticket = nil
+
+  -- If we load into the input_with_recoup state we have to simulate that there was a timeout pending from the input itself
+  if first_state == 'input_with_recoup' then
+    timeout(input_cycle_time)
+  end
 
   FSM.ontrain_arrive = function(self, event, from, to) print("Choo choo") end
   FSM.onleave = function (self, event, from, to)
@@ -261,13 +267,14 @@ local function main() -- routine
     timeout(flush_time)
   end
   FSM.onstatechange = function(self, event, from, to)
-    monitor.clear()
-    monitor.setCursorPos(1,1)
-    monitor.setTextColor(colors.magenta)
-    monitor.write("Station state: ")
-    monitor.setTextColor(colors.white)
-    monitor.write(to)
-
+    if monitor then
+      monitor.clear()
+      monitor.setCursorPos(1,1)
+      monitor.setTextColor(colors.magenta)
+      monitor.write("Station state: ")
+      monitor.setTextColor(colors.white)
+      monitor.write(to)
+    end
     for channel_name, default in pairs(redstone_defaults) do
       local activation = default
       if state_output_map[to][channel_name] then

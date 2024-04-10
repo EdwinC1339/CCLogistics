@@ -228,6 +228,7 @@ local function main() -- routine
       { name = 'timeout', from = 'sig_wait', to = 'input' },
       { name = 'timeout', from = 'input',    to = 'leave' },
       { name = 'timeout', from = 'output', to = 'flush' },
+      { name = 'timeout', from = 'flush', to = 'leave' },
       { name = 'timeout', from = 'recoup_wait', to = 'leave'},
       { name = 'timeout', from = 'leave', to = 'inactive'},
       { name = 'collect', from = 'sig_wait', to = 'output'},
